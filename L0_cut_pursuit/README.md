@@ -18,17 +18,17 @@ A structured regularization framework for spatially smoothing semantic labelings
 Loic Landrieu, Hugo Raguet , Bruno Vallet , Clément Mallet, Martin Weinmann
 
 ### Compilation
-
+```
 mkdir ./L0_cut_pursuit/bin
 addpath('./L0_Cut_Pursuit/bin/')
 mex CXXFLAGS="\$CXXFLAGS -pthread -Wall -std=c++11 -fopenmp -O3"...
     LDFLAGS="\$LDFLAGS -fopenmp" L0_cut_pursuit/api/L0_cut_pursuit_mex.cpp ...
     -output L0_cut_pursuit/bin/L0_cut_pursuit_mex
-    
+```    
  ### Example
  
 minimal example on a chain graph.
-
+```
 rng(1)
 n_nodes = 100;
 y = rand(3,100);
@@ -44,3 +44,4 @@ subplot(2,1,1)
 imagesc(repmat(y, [1 1 1]))
 subplot(2,1,2)
 imagesc(solution)
+```
