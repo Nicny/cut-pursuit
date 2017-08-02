@@ -13,7 +13,7 @@
 //general weighted graphs, Loic Landrieu and Guillaume Obozinski,2016.
 //
 //Produce a piecewise constant approximation of signal $y$ structured
-//by the graph G=(V,e,mu,w) with mu the node weight and w the edge_weight:
+//by the graph G=(V,e,mu,w) with mu the node weight and w the edgeweight:
 //argmin \sum_{i \IN V}{mu_i * phi(x_I, y_I)} 
 //+ \sum_{(i,j) \IN E}{w_{i,j} 1(x_I != x_J)}
 //
@@ -24,60 +24,61 @@
 //
 //=======================SYNTAX===================================================
 //
-//[solution, inComponent, components, Eu_red, Ev_red, edge_weight_red, node_weight_red]
-// = L0_cut_pursuit_segmentation(observation, Eu, Ev, lambda = 1, edge_weight = [1 ... 1]
-//                 , node_weight = [1 ... 1], mode = 1, speed = 1, verbose = false)
+//[solution, inComponent, components, Eu_red, Ev_red, edgeWeight_red, nodeWeight_red]
+// = L0_cut_pursuit_segmentation(observation, Eu, Ev, lambda = 1, edgeWeight = [1 ... 1]
+//                 , nodeWeight = [1 ... 1], mode = 1, speed = 1, verbose = false)
 //-----INPUT-----
-// N x D float observation : the observed signal
-// E x 1 int Eu, Ev: the origin and destination of each node
-// E x 1 float  edge_weight: the edge weight
-// N x 1 float  node_weight: the node weight
-// 1 x 1 float lambda : the regularization strength
-// 1 x 1 float mode : the fidelity function
+// DxN float observation : the observed signal
+// Ex1 int Eu, Ev: the origin and destination of each node
+// /!\ INDEX OF THE FIRST NODE MUST BE ZERO AND LAST NODE nNodes - 1
+// Ex1 float  edgeWeight: the edge weight
+// Nx1 float  nodeWeight: the node weight
+// 1x1 float lambda : the regularization strength
+// 1x1 float mode : the fidelity function
 //      0 : linear (for simplex bound data)
 //      1 : quadratic (default)
 //   0<a<1: KL with a smoothing (for simplex bound data)
-// 1 x 1 float speed : parametrization impacting performance
+// 1x1 float speed : parametrization impacting performance
 //      0 : slow but precise
 //      1 : recommended (default)
 //      2 : fast but approximated (no backward step)
 //      3 : ludicrous - for prototyping (no backward step)
-// 1 x 1 bool verose : verbosity
+// 1x1 bool verose : verbosity
 //      0 : silent
 //      1 : recommended (default)
 //      2 : chatty
 //-----OUTPUT-----
-// N x 1 float  solution: piecewise constant approximation
-// N x 1 int inComponent: for each node, in which component it belongs
-// n_nodes_red x 1 cell components : for each component, list of the nodes
-// 1 x 1 int n_nodes_red : number of components
-// 1 x 1 int n_edges_red : number of edges in reduced graph
-// n_edges_red x 1 int Eu_red, Ev_red : source and target of reduced edges
-// n_edges_red x 1 float edge_weight_red: weights of reduced edges
-// n_nodes_red x 1  float node_weight_red: weights of reduced nodes
+// Nx1 float  solution: piecewise constant approximation
+// Nx1 int inComponent: for each node, in which component it belongs
+// n_node_redx1 cell components : for each component, list of the nodes
+// n_node_red : number of components
+// int n_edges_red : number of edges in reduced graph
+// n_edges_redx1 int Eu_red, Ev_red : source and target of reduced edges
+// n_edges_redx1 float edgeWeight_red: weights of reduced edges
+// n_node_redx1  float nodeWeight_red: weights of reduced nodes
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     //---read dimensions----//
-    const int n_nodes = mxGetN(prhs[0]); //number of nodes
+    const int nNod = mxGetN(prhs[0]); //number of nodes
     const int nObs = mxGetM(prhs[0]); // size of observation for each node
     const int nEdg = mxGetNumberOfElements(prhs[1]); //number of edges
     //---read inputs----
-    std::vector< std::vector<float> > observation(n_nodes);
+    std::vector< std::vector<float> > observation(nNod);
     const std::vector<int> Eu((int*)mxGetData(prhs[1]), (int*)mxGetData(prhs[1])+nEdg);
     const std::vector<int> Ev((int*)mxGetData(prhs[2]), (int*)mxGetData(prhs[2])+nEdg);
     const float lambda        = (float) mxGetScalar(prhs[3]); //reg strength
-    const std::vector<float> edge_weight((float*)mxGetData(prhs[4]), (float*)mxGetData(prhs[4])+nEdg);
-    const std::vector<float> node_weight((float*)mxGetData(prhs[5]), (float*)mxGetData(prhs[5])+n_nodes);
+    const std::vector<float> edgeWeight((float*)mxGetData(prhs[4]), (float*)mxGetData(prhs[4])+nEdg);
+    const std::vector<float> nodeWeight((float*)mxGetData(prhs[5]), (float*)mxGetData(prhs[5])+nNod);
     const float mode          = (float) mxGetScalar(prhs[6]); //fidelity
     const float speed         = (float) mxGetScalar(prhs[7]); //speed mode
     const float verbose       = (float) mxGetScalar(prhs[8]); //verbosity*/
     //--fill the observation----
     const float *observation_array = (float*) mxGetData(prhs[0]);
-    std::vector< std::vector<float> > solution(n_nodes);
+    std::vector< std::vector<float> > solution(nNod);
     int ind_obs = 0;
-    for (int ind_nod = 0; ind_nod < n_nodes; ind_nod++)
+    for (int ind_nod = 0; ind_nod < nNod; ind_nod++)
     {
         observation[ind_nod] = std::vector<float>(nObs);
         solution[ind_nod]    = std::vector<float>(nObs);
@@ -89,78 +90,69 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     //---set up output--------------------------------
     //plhs[0] = mxDuplicateArray(prhs[0]);
-    int * in_component_array, * Eu_red_array, * Ev_red_array;
-    float * edge_weight_red_array, * node_weight_red_array;
-    int n_nodes_red, n_edges_red;
-    std::vector<int> in_component, Eu_red, Ev_red;
-    std::vector< std::vector<int> > components;
-    std::vector<float>  edge_weight_red, node_weight_red;
 
-    if (true)
+    if (nlhs == 1)
     {
-    CP::cut_pursuit<float>(n_nodes, nEdg, nObs
-            , observation, Eu, Ev, edge_weight, node_weight
-            , solution
-            , in_component, components
-            , n_nodes_red, n_edges_red,  Eu_red, Ev_red
-            , edge_weight_red,node_weight_red
-            ,lambda, mode, speed,verbose);
-    }
-    if (true)
-    {
-        //std::cout << in_component[0] << " " << in_component[1000] << " " << in_component[1000000] << std::endl;
+        CP::cut_pursuit<float>(nNod, nEdg, nObs
+                , observation, Eu, Ev, edgeWeight, nodeWeight
+                , solution
+                , lambda, mode, speed,verbose);
+
+    } else if (nlhs > 1)
+    {   //we want the reduced structure
+        int n_nodes_red, & n_edges_red;
+        std::vector<int> in_component, Eu_red, Ev_red;
+        std::vector< std::vector<int> > components;
+        std::vector<T> & edgeWeight_red, nodeWeight_red;
         
+        CP::cut_pursuit<float>(nNod, nEdg, nObs
+                , y, Eu, Ev, edgeWeight, nodeWeight
+                , solution
+                , in_component, components
+                , n_nodes_red, n_edges_red,  Eu_red, Ev_red
+                , edgeWeight_red,nodeWeight_red
+                ,lambda, mode, speed,verbose);   
 
-        //float *  edge_weight_red_array, * node_weight_red_array;
+        plhs[1] = mxCreateNumericMatrix(nNod, 1 , mxINT32_CLASS, mxREAL);
+        in_component_array = (int*) mxGetData(plhs[1]);
+        std::copy(in_component.begin(), in_component.end(), in_component_array);
 
-    //-----------fill solution----------
+        //    plhs[2] = mxCreateNumericMatrix(1, 1 , mxINT32_CLASS, mxREAL);
+        //    n_nodes_red_array = (int*) mxGetData(plhs[2]);
 
+        plhs[3] = mxCreateNumericMatrix(n_edges_red, 1 , mxINT32_CLASS, mxREAL);
+        Eu_red_array = (int*) mxGetData(plhs[3]);
+        std::copy(Eu_red.begin(), Eu_red.end(), Eu_red_array);
+
+        plhs[4] = mxCreateNumericMatrix(n_edges_red, 1 , mxINT32_CLASS, mxREAL);
+        Ev_red_array = (int*) mxGetData(plhs[4]);
+        std::copy(Ev_red.begin(), Ev_red.end(), Ev_red_array);
+
+        plhs[5] = mxCreateNumericMatrix(n_edges_red, 1 ,mxSINGLE_CLASS, mxREAL);
+        edgeWeight_red_array = (float*) mxGetData(plhs[5]);
+        std::copy(edgeWeight_red.begin(), edgeWeight_red.end(), edgeWeight_red_array);
+
+        plhs[6] = mxCreateNumericMatrix(n_nodes_red, 1 , mxSINGLE_CLASS, mxREAL);
+        nodeWeight_red_array = (float*) mxGetData(plhs[6]);
+        std::copy(nodeWeight_red.begin(), nodeWeight_red.end(), nodeWeight_red_array);
+        
+    }
+ 
     plhs[0] = mxDuplicateArray(prhs[0]);
     float * solution_array = (float *) mxGetData(plhs[0]);
     ind_obs = 0;
-    for (int ind_nod = 0; ind_nod < n_nodes; ind_nod++)
+    for (int ind_nod = 0; ind_nod < nNod; ind_nod++)
     {
         for (int ind_dim = 0; ind_dim < nObs; ind_dim++)
-        {
+        {   
             solution_array[ind_obs] = solution[ind_nod][ind_dim];
             ind_obs++;
         }
-    }
-    //----------fill in_component----------
-    plhs[1] = mxCreateNumericMatrix(n_nodes, 1 , mxINT32_CLASS, mxREAL);
-    in_component_array = (int*) mxGetData(plhs[1]);
-    std::copy(in_component.begin(), in_component.end(), in_component_array);
-
-    //----------fill components----------
-    mxArray *components_ptr = mxCreateCellMatrix(n_nodes_red , 1 );
-    for(int ind_nod_red = 0; ind_nod_red < n_nodes_red; ind_nod_red++)
-    {
-        std::size_t comp_size = components[ind_nod_red].size();
-        mxArray * one_component_ptr;
-        //std::cout << ind_nod_red << " " << comp_size << std::endl;
-        one_component_ptr = mxCreateNumericMatrix(comp_size , 1, mxINT32_CLASS, mxREAL);
-        std::copy(components[ind_nod_red].begin(), components[ind_nod_red].end(), (int*) mxGetData(one_component_ptr));
-        //memcpy(mxGetPr(one_component_ptr), &components[ind_nod_red][0], sizeof(int) * comp_size);
-        mxSetCell(components_ptr, ind_nod_red, one_component_ptr );
-    }
-    plhs[2] = components_ptr;
-    //----------fill Eu_red----------
-    plhs[3] = mxCreateNumericMatrix(n_edges_red, 1 , mxINT32_CLASS, mxREAL);
-    Eu_red_array = (int*) mxGetData(plhs[3]);
-    std::copy(Eu_red.begin(), Eu_red.end(), Eu_red_array);
-    //----------fill Ev_red----------
-    plhs[4] = mxCreateNumericMatrix(n_edges_red, 1 , mxINT32_CLASS, mxREAL);
-    Ev_red_array = (int*) mxGetData(plhs[4]);
-    std::copy(Ev_red.begin(), Ev_red.end(), Ev_red_array);
-    //----------fill edge_weight_red----------
-    plhs[5] = mxCreateNumericMatrix(n_edges_red, 1 ,mxSINGLE_CLASS, mxREAL);
-    edge_weight_red_array = (float*) mxGetData(plhs[5]);
-    std::copy(edge_weight_red.begin(), edge_weight_red.end(), edge_weight_red_array);
-    //----------fill edge_weight_red----------
-    plhs[6] = mxCreateNumericMatrix(n_nodes_red, 1 , mxSINGLE_CLASS, mxREAL);
-    node_weight_red_array = (float*) mxGetData(plhs[6]);
-    std::copy(node_weight_red.begin(), node_weight_red.end(), node_weight_red_array);
-    }
+    }   
+    
+    //mxArray * mx = mxCreateDoubleMatrix(1,nNod, mxREAL);
+    //std::copy(solution.begin(), solution.end(), mxGetPr(mx));
+    //plhs[0] = mx;
     return;
 }
 
