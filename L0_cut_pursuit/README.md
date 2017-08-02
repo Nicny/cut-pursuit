@@ -31,7 +31,7 @@ minimal example on a chain graph.
 ```
 rng(1)
 n_nodes = 100;
-y = rand(3,100);
+y = rand(3,n_nodes);
 Eu = 0:(n_nodes-2);
 Ev = 1:(n_nodes-1);
 edge_weight = ones(numel(Eu),1);
