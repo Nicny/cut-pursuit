@@ -30,7 +30,7 @@ class CutPursuit_L2 : public CutPursuit<T>
                 energy += .5*vertex_attribute_map(i_ver).weight
                         * pow(vertex_attribute_map(i_ver).observation[i_dim]
                             - vertex_attribute_map(i_ver).value[i_dim],2);
-            }
+            }          
         }
         pair_energy.first = energy;
         energy = 0;
@@ -44,6 +44,7 @@ class CutPursuit_L2 : public CutPursuit<T>
             energy += .5 * edge_attribute_map(*i_edg).isActive * this->parameter.reg_strenth
                     * edge_attribute_map(*i_edg).weight;
         }
+        pair_energy.second = energy;
         return pair_energy;
     }
     //=============================================================================================
@@ -75,6 +76,7 @@ class CutPursuit_L2 : public CutPursuit<T>
             //compute h_1 and h_2
             centers = VectorOfCentroids<T>(nb_comp, this->dim);
             this->compute_centers(centers, nb_comp,binary_label);
+                    
             this->set_capacities(centers);
             // update the capacities of the flow graph
             boost::boykov_kolmogorov_max_flow(
@@ -124,7 +126,7 @@ class CutPursuit_L2 : public CutPursuit<T>
             std::vector<bool> potential_label(comp_size);    
             std::vector<T> energy_array(comp_size);
             
-            if (this->saturated_components[ind_com] || comp_size <= 2)
+            if (this->saturated_components[ind_com] || comp_size <= 1)
             {
                 continue;
             }
@@ -162,7 +164,6 @@ class CutPursuit_L2 : public CutPursuit<T>
                 { // now fill the second kernel
                    kernels[1][i_dim] = vertex_attribute_map(this->components[ind_com][second_kernel]).observation[i_dim];
                 }
-
                 //----main kmeans loop-----
                 for (std::size_t ite_kmeans = 0; ite_kmeans < this->parameter.kmeans_ite; ite_kmeans++)
                 {
@@ -195,28 +196,27 @@ class CutPursuit_L2 : public CutPursuit<T>
                         }
                         if (potential_label[i_ver])
                         {
-                            total_weight[1] += vertex_attribute_map(this->components[ind_com][i_ver]).weight;
+                            total_weight[0] += vertex_attribute_map(this->components[ind_com][i_ver]).weight;
                             for(std::size_t i_dim=0; i_dim < this->dim; i_dim++)
                             {
-                                kernels[1][i_dim] += vertex_attribute_map(this->components[ind_com][i_ver]).observation[i_dim]
+                                kernels[0][i_dim] += vertex_attribute_map(this->components[ind_com][i_ver]).observation[i_dim]
                                                   * vertex_attribute_map(this->components[ind_com][i_ver]).weight ;
                              }
                          }
                          else
                          {
-                            total_weight[0] += vertex_attribute_map(this->components[ind_com][i_ver]).weight;
+                            total_weight[1] += vertex_attribute_map(this->components[ind_com][i_ver]).weight;
                             for(std::size_t i_dim=0; i_dim < this->dim; i_dim++)
                             {
-                                kernels[0][i_dim] += vertex_attribute_map(this->components[ind_com][i_ver]).observation[i_dim]
+                                kernels[1][i_dim] += vertex_attribute_map(this->components[ind_com][i_ver]).observation[i_dim]
                                                   * vertex_attribute_map(this->components[ind_com][i_ver]).weight;
                             }
                          }
-                    }
+                    }                     
                     if ((total_weight[0] == 0)||(total_weight[1] == 0))
                     {
-			std::cout << ind_com << " kmeans error"<< comp_size << std::endl;
-			break;	
-                        
+                        break;	
+                        //std::cout << "kmeans error" << std::endl;
                     }
                     for(std::size_t i_dim=0; i_dim < this->dim; i_dim++)
                     {
@@ -233,15 +233,15 @@ class CutPursuit_L2 : public CutPursuit<T>
                        if (potential_label[i_ver])
                        {
                        current_energy += pow(vertex_attribute_map(this->components[ind_com][i_ver]).observation[i_dim]
-                                        - kernels[1][i_dim],2) * vertex_attribute_map(this->components[ind_com][i_ver]).weight;
+                                        - kernels[0][i_dim],2) * vertex_attribute_map(this->components[ind_com][i_ver]).weight;
                        }
                        else
                        {
                         current_energy += pow(vertex_attribute_map(this->components[ind_com][i_ver]).observation[i_dim]
-                                        - kernels[0][i_dim],2) * vertex_attribute_map(this->components[ind_com][i_ver]).weight;
+                                        - kernels[1][i_dim],2) * vertex_attribute_map(this->components[ind_com][i_ver]).weight;
                         }
                    }
-                }
+                }                  
                 if (current_energy < best_energy)
                 {
                     best_energy = current_energy;
