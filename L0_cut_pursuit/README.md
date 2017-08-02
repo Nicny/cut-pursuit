@@ -19,8 +19,28 @@ Loic Landrieu, Hugo Raguet , Bruno Vallet , Clément Mallet, Martin Weinmann
 
 ### Compilation
 
-mkdir ./L0_Cut_Pursuit/bin
+mkdir ./L0_cut_pursuit/bin
 addpath('./L0_Cut_Pursuit/bin/')
 mex CXXFLAGS="\$CXXFLAGS -pthread -Wall -std=c++11 -fopenmp -O3"...
-    LDFLAGS="\$LDFLAGS -fopenmp" L0_Cut_Pursuit/api/L0_cut_pursuit_mex.cpp ...
-    -output L0_Cut_Pursuit/bin/L0_cut_pursuit_mex
+    LDFLAGS="\$LDFLAGS -fopenmp" L0_cut_pursuit/api/L0_cut_pursuit_mex.cpp ...
+    -output L0_cut_pursuit/bin/L0_cut_pursuit_mex
+    
+ ### Example
+ 
+minimal example on a chain graph.
+
+rng(1)
+n_nodes = 100;
+y = rand(3,100);
+Eu = 0:(n_nodes-2);
+Ev = 1:(n_nodes-1);
+edge_weight = ones(numel(Eu),1);
+node_weight = ones(n_nodes,1);
+
+solution = L0_cut_pursuit_mex(single(y), int32(Eu), int32(Ev), single(.2)...
+    , single(edge_weight), single(node_weight), 1, 2, 2);
+
+subplot(2,1,1)
+imagesc(repmat(y, [1 1 1]))
+subplot(2,1,2)
+imagesc(solution)
