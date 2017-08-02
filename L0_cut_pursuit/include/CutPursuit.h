@@ -73,7 +73,7 @@ class CutPursuit
         this->initialize();
         if (this->parameter.verbose > 0)
         {
-            std::cout << "Graph "  << boost::num_vertices(this->main_graph) << " vertices and "
+            std::cout << "Graph "  << boost::num_vertices(this->main_graph)-2 << " vertices and "
              <<   boost::num_edges(this->main_graph)  << " edges and observation of dimension "
              << this->dim << '\n';
         }
