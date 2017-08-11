@@ -18,6 +18,7 @@ A structured regularization framework for spatially smoothing semantic labelings
 Loic Landrieu, Hugo Raguet , Bruno Vallet , Clément Mallet, Martin Weinmann
 
 ### Compilation
+MATLAB
 ```
 mkdir ./L0_cut_pursuit/bin
 addpath('./L0_Cut_Pursuit/bin/')
@@ -25,6 +26,11 @@ mex CXXFLAGS="\$CXXFLAGS -pthread -Wall -std=c++11 -fopenmp -O3"...
     LDFLAGS="\$LDFLAGS -fopenmp" L0_cut_pursuit/api/L0_cut_pursuit_mex.cpp ...
     -output L0_cut_pursuit/bin/L0_cut_pursuit_mex
 ```    
+C++
+```
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pthread  -Wall -std=c++11")'
+```
+
  ### Example
  
 minimal example on a chain graph.
