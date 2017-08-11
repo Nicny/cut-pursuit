@@ -28,8 +28,10 @@ mex CXXFLAGS="\$CXXFLAGS -pthread -Wall -std=c++11 -fopenmp -O3"...
 ```    
 C++
 ```
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pthread  -Wall -std=c++11")'
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pthread -fopenmp -O3 -Wall -std=c++11")'
 ```
+
+Note: the parallelisation is not yet implmented, so fopenmp can be foregone for now.
 
  ### Example
  
