@@ -1,21 +1,22 @@
 # cut pursuit: a working-set strategy to compute piecewise constant functions on graphs
 C/C++ implementation fot the cut pursuit algorithms with Matlab interfaces.
 
-Cut pursuit is a graph-cut-based working-set strategy to minimize functions regularized by graph-structured regularizers. For `G = (V,E,w)` a graph with edges weighted by `w`, the problem writes:
+Cut pursuit is a graph-cut-based working-set strategy to minimize functions regularized by graph-structured regularizers. For _G_ = (_V_,_E_,_w_)` a graph with edges weighted by `w`, the problem writes:
 
-    min_{x in S^V}   f(x) + \sum_{u, v \in E) w_{u,v} \phi(x_u - x_v)
+    min<sub>_x_ ∈ _Ω_<sup>V</sup></sub> _f_(_x_) + 
+    ∑<sub>_u_,_v_ ∈ _E_</sub> _w_<sub>_u_,_v_</sub>}
+    _φ_(_x_<sub>__u__</sub> - _x_<sub>_v_</sub>)
 
-where S is a space in which the value associated with each node belongs.
+where _Ω_ is a space in which the value associated with each node belongs.
 
-We distinguish two different cases  for `\phi`, for which the implementations are different:
-- `\phi(t) = |t|`: the convex case,  the regularizer is the graph total variation. See folder `cut_pursuit`. Code by Hugo Raguet.
-- `\phi(t) = \delta(t != 0) = 1 - kroenecker(t)`:  the non-convex case, the regularizer is the weight of the cut between the adjacent constant components. Can be used for regularization or segmentation. See folder `L0_cut_pursuit`. Code by Loic Landrieu.
+We distinguish two different cases  for _φ_, for which the implementations are different:
+- _φ_: _t_ → |_t_|: the convex case, the regularizer is the __graph total variation__.
+Implemented for many different functionals _f_, such as quadratic, ℓ<sub>1</sub>-norm, box constraints, simplex constraints, linear, smoothed Kullback—Leibler.
+See repository [CP_PFDR_graph_d1](https://github.com/1a7r0ch3/CP_PFDR_graph_d1), by Hugo Raguet.
+- _φ_: _t_ → _δ_(_t_ ≠ 0) = 1 - _δ_<sub>0</sub>(t)`: the nonconvex case, the regularizer is the weight of the cut between the adjacent constant components. Can be used for regularization or segmentation. See folder `L0_cut_pursuit`. Code by Loic Landrieu.
 
 ### References:
-
 Cut Pursuit: fast algorithms to learn piecewise constant functions on general weighted graphs,
 L. Landrieu and G. Obozinski, 2016.
 
-if using the implementation in the convex case, one must also cite:
-
-Cut-pursuit algorithm for convex nonsmooth functionals regularized by graph total variation, H. Raguet and L. Landrieu, in preparation. 
+Cut-pursuit algorithm for nonsmooth functionals regularized by graph total variation, H. Raguet and L. Landrieu, in preparation. 
